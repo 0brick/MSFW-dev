@@ -1,0 +1,21 @@
+#!/bin/sh
+# i3-apple: Wird von D-Bus gestartet, wenn ein Programm eine Mitteilung schickt,
+# aber noch kein Mitteilungsdienst läuft.
+#  • In der Sway-Sitzung → dunst mit ~/.config/sway/dunst/dunstrc
+#  • Überall sonst (Plasma, GNOME …) → der Dienst, den das System dafür vorsieht.
+#    So kann dunst dort nie die Mitteilungen übernehmen.
+#  Die i3-Zeile bleibt nur, weil dieser Eintrag für alle Sitzungen gilt – ohne sie
+#  bekäme eine vorhandene i3-Sitzung keinen dunst mehr.
+case ":${XDG_CURRENT_DESKTOP:-}:" in
+  *:sway:*) exec dunst -config "$HOME/.config/sway/dunst/dunstrc" ;;
+  *:i3:*)   exec dunst ;;
+esac
+
+for f in /usr/local/share/dbus-1/services/*.service /usr/share/dbus-1/services/*.service; do
+  [ -f "$f" ] || continue
+  grep -qx 'Name=org.freedesktop.Notifications' "$f" || continue
+  grep -qi 'dunst' "$f" && continue
+  cmd=$(sed -n 's/^Exec=//p' "$f" | head -n 1)
+  [ -n "$cmd" ] && exec sh -c "$cmd"
+done
+exit 1

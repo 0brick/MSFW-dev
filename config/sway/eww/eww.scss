@@ -1,0 +1,322 @@
+// ═══════════════════════════════════════════════════════════════════
+//  i3-apple · Sway · Stil der Menüleiste & Popups (macOS-Dunkelmodus)
+// ═══════════════════════════════════════════════════════════════════
+
+$font: "SF Pro Text", "SF Pro Display", "SF Pro", sans-serif;
+
+$fg:        #f5f5f7;
+$fg-dim:    rgba(245, 245, 247, 0.55);
+$bar-bg:    rgba(20, 20, 22, 0.55);
+$pop-bg:    rgba(38, 38, 42, 0.82);
+$border:    rgba(255, 255, 255, 0.12);
+$hover:     rgba(255, 255, 255, 0.10);
+$active:    rgba(255, 255, 255, 0.16);
+$accent:    #0a84ff;
+$green:     #30d158;
+$yellow:    #ffd60a;
+$red:       #ff453a;
+$card:      rgba(255, 255, 255, 0.07);
+
+// Bewegung: dezent, kurze Übergänge, weiche Kurven, nichts springt.
+// Wichtig: Keine Einblend-Animation an Elementen in (for …)-Schleifen –
+// eww baut sie bei jeder Aktualisierung neu auf, sie würden sonst flackern.
+$ease:     cubic-bezier(0.25, 0.1, 0.25, 1);
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+* {
+  all: unset;
+  font-family: $font;
+}
+
+// Symbole immer aus dem eigenen Symbol-Theme der Menüleiste (scripts/bar-icons.py).
+// Ohne diese Zeile nimmt GTK das Symbol-Theme aus gsettings/dconf der Sitzung –
+// kam dort kein WhiteSur an, zeigte die Leiste nur Platzhalter.
+* { -gtk-icon-theme: "i3apple-sway-bar"; }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes rec-pulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.35; }
+  100% { opacity: 1; }
+}
+// Die aktive Arbeitsfläche „wächst“ zur langen Pille. Als Animation statt
+// Übergang, weil eww die Pillen bei jedem Wechsel neu erzeugt.
+@keyframes ws-grow {
+  from { min-width: 7px; }
+  to   { min-width: 22px; }
+}
+
+tooltip {
+  background-color: rgba(30, 30, 32, 0.96);
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 5px 10px;
+  color: $fg;
+  font-size: 12px;
+  animation: fade-in 140ms $ease-out;
+}
+
+// ── Menüleiste ──────────────────────────────────────────────────────
+
+.bar {
+  background-color: $bar-bg;
+  color: $fg;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 12px;
+  animation: fade-in 320ms $ease-out;
+}
+
+.item {
+  padding: 0 10px;
+  margin: 4px 1px;
+  border-radius: 7px;
+  transition: background-color 180ms $ease;
+}
+.item:hover, .item.active { background-color: $active; }
+
+.clock { font-weight: 600; }
+
+.app-name {
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+// Arbeitsflächen als Pillen (wie GNOME)
+.ws { padding: 0 3px; min-height: 32px; }
+.ws .pill {
+  min-width: 7px;
+  min-height: 7px;
+  border-radius: 99px;
+  background-color: rgba(255, 255, 255, 0.35);
+  transition: min-width 280ms $ease-out, background-color 220ms $ease;
+}
+.ws:hover .pill   { background-color: rgba(255, 255, 255, 0.7); }
+.ws.visible .pill { background-color: rgba(255, 255, 255, 0.6); }
+.ws.focused .pill {
+  min-width: 22px;
+  background-color: $fg;
+  animation: ws-grow 280ms $ease-out;
+}
+.ws.urgent .pill  { background-color: $red; }
+
+// Symbolische Theme-Icons übernehmen die Textfarbe
+.icon {
+  color: $fg;
+  transition: color 200ms $ease;
+}
+
+// Batterie: Theme-Icon, je nach Zustand eingefärbt
+.bat-pct { font-size: 12px; font-weight: 500; }
+.battery.charging .icon { color: $green; }
+.battery.saver .icon    { color: $yellow; }
+.battery.low .icon      { color: $red; }
+
+// Laufende Bildschirmaufnahme
+.recording { color: $red; }
+.rec-dot {
+  min-width: 9px;
+  min-height: 9px;
+  border-radius: 99px;
+  background-color: $red;
+  animation: rec-pulse 1.6s ease-in-out infinite;
+}
+.rec-time { font-size: 12px; font-weight: 600; }
+
+// ── Popups (Kontrollzentrum-Stil) ───────────────────────────────────
+
+.closer { background-color: rgba(0, 0, 0, 0.01); }
+
+// border-radius = corner_radius von „eww-popup“ in fx-effects.conf
+.popup {
+  background-color: rgba(36, 36, 40, 0.80);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 14px;
+  color: $fg;
+  font-size: 13px;
+  animation: fade-in 170ms $ease-out;
+}
+
+.header { margin: 2px 4px 4px 4px; }
+.header-value {
+  color: $fg-dim;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.title { font-size: 15px; font-weight: 700; }
+.title.big { font-size: 15px; margin: 2px 4px 10px 4px; }
+.big-pct { color: $fg; font-size: 18px; font-weight: 600; }
+.subtitle { color: $fg-dim; font-size: 12px; margin-top: 2px; }
+
+// Abschnitt = Überschrift + Karte darunter
+.section {
+  color: $fg-dim;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 14px 8px 0 8px;
+}
+.card {
+  background-color: $card;
+  border-radius: 10px;
+  padding: 4px;
+  margin-top: 6px;
+}
+.cal-card { padding: 6px 4px; }
+
+.hint { color: $fg-dim; margin: 8px; }
+.dim { opacity: 0.6; }
+
+.sep {
+  min-height: 1px;
+  background-color: rgba(255, 255, 255, 0.08);
+  margin: 12px 6px 6px 6px;
+}
+
+.row {
+  padding: 6px 8px;
+  border-radius: 7px;
+  transition: background-color 150ms $ease;
+}
+.row:hover { background-color: rgba(255, 255, 255, 0.08); }
+.row.static:hover { background-color: transparent; }
+.row-label { font-weight: 500; }
+.meta { color: $fg-dim; font-size: 11px; margin-top: 1px; }
+
+.row-icon {
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 99px;
+  background-color: rgba(255, 255, 255, 0.14);
+  transition: background-color 220ms $ease;
+}
+.row-icon.on { background-color: $accent; }
+.row-icon .icon { color: $fg; }
+.check .icon { color: $accent; }
+
+.badge {
+  color: $fg-dim;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.close-btn {
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 99px;
+  opacity: 0.5;
+  transition: opacity 150ms $ease, background-color 150ms $ease;
+}
+.close-btn:hover { opacity: 1; background-color: rgba(255, 255, 255, 0.14); }
+
+.link {
+  padding: 7px 8px;
+  border-radius: 7px;
+  transition: background-color 150ms $ease;
+}
+.link:hover { background-color: $hover; }
+
+.kv { padding: 5px 8px; }
+.kv .key { color: $fg-dim; }
+.kv .val { font-weight: 500; }
+
+// Schalter im iOS/macOS-Stil: Knopf gleitet (eww.yuck hält ihn links,
+// der Rand schiebt ihn)
+.toggle {
+  min-width: 38px;
+  min-height: 22px;
+  border-radius: 99px;
+  background-color: rgba(255, 255, 255, 0.22);
+  transition: background-color 220ms $ease;
+}
+.toggle.on { background-color: $accent; }
+.toggle .knob {
+  min-width: 18px;
+  min-height: 18px;
+  margin: 2px;
+  border-radius: 99px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: margin-left 240ms $ease-out;
+}
+.toggle.on .knob { margin-left: 18px; }
+
+// Segmentierter Umschalter (Energiemodus)
+.segmented {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  padding: 2px;
+  margin: 6px 0 0 0;
+}
+.seg {
+  padding: 6px 4px;
+  border-radius: 7px;
+  font-size: 12px;
+  transition: background-color 180ms $ease;
+}
+.seg:hover { background-color: $hover; }
+.seg.active {
+  background-color: rgba(255, 255, 255, 0.24);
+  font-weight: 600;
+}
+
+// Schieberegler wie im Kontrollzentrum
+.slider-row { margin: 4px 6px; }
+.slider-btn {
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 99px;
+  transition: background-color 150ms $ease;
+}
+.slider-btn:hover { background-color: $hover; }
+
+scale trough {
+  min-height: 22px;
+  min-width: 200px;
+  border-radius: 99px;
+  background-color: rgba(255, 255, 255, 0.14);
+}
+scale highlight {
+  border-radius: 99px;
+  background-color: $fg;
+  transition: background-color 200ms $ease;
+}
+scale slider {
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 99px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+// Kalender
+.cal { padding: 2px 4px; font-size: 12px; }
+calendar { padding: 4px; }
+calendar.header { font-weight: 700; }
+calendar.button { color: $fg-dim; }
+calendar.button:hover { color: $fg; }
+calendar.highlight { color: $fg-dim; font-weight: 600; }
+calendar:indeterminate { color: rgba(255, 255, 255, 0.25); }
+calendar:selected {
+  background-color: $accent;
+  color: #ffffff;
+  border-radius: 99px;
+}
+
+// Statusleisten-Symbole
+.tray-box { margin: 10px 0 0 0; padding: 10px 12px; }
+.tray menu {
+  background-color: $pop-bg;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 5px;
+  color: $fg;
+}
+.tray menu menuitem { padding: 5px 12px; border-radius: 6px; }
+.tray menu menuitem:hover { background-color: $accent; }

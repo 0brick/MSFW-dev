@@ -1,0 +1,19 @@
+#!/bin/sh
+# i3-apple: rofi mit der Sway-eigenen Konfiguration (~/.config/sway/rofi).
+# Liegt nur in der Sway-Sitzung vorn im PATH (env-sway.sh) – so bekommen auch
+# rofimoji & Co. das Spotlight-Design, während ~/.config/rofi für andere
+# Desktops unverändert bleibt. Ein selbst gebautes rofi mit Wayland hat Vorrang.
+self=$(readlink -f "$0")
+cfg="$HOME/.config/sway/rofi/config.rasi"
+
+old_ifs=$IFS
+IFS=:
+for dir in "$HOME/.local/share/i3-apple/rofi-wayland/bin" $PATH; do
+  bin="$dir/rofi"
+  [ -x "$bin" ] || continue
+  [ "$(readlink -f "$bin")" = "$self" ] && continue
+  IFS=$old_ifs
+  exec "$bin" -config "$cfg" "$@"
+done
+echo "rofi nicht gefunden" >&2
+exit 127

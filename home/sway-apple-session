@@ -1,0 +1,19 @@
+#!/bin/sh
+# i3-apple: startet Sway mit der Umgebung aus ~/.config/i3-apple/env-sway.sh
+# (eingetragen als Sitzung „Sway (i3-apple)“ am Anmeldebildschirm).
+# Nach dem Abmelden werden die Variablen, die die Sitzung an systemd/D-Bus
+# weitergegeben hat, wieder entfernt – damit ein später gestartetes Plasma
+# oder GNOME nichts davon erbt.
+[ -f "$HOME/.config/i3-apple/env-sway.sh" ] && . "$HOME/.config/i3-apple/env-sway.sh"
+
+sway "$@"
+rc=$?
+
+# Nur aufräumen, wenn die Sway-Sitzung die Werte gesetzt hat (Markierung von autostart.sh)
+mark="${XDG_RUNTIME_DIR:-/tmp}/sway-apple/env-exported"
+if [ -f "$mark" ]; then
+  systemctl --user unset-environment WAYLAND_DISPLAY DISPLAY SWAYSOCK \
+    XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP 2>/dev/null
+  rm -f "$mark"
+fi
+exit $rc

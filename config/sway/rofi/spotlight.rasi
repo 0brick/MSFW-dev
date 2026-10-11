@@ -1,0 +1,95 @@
+/* i3-apple · Spotlight im Glas-Stil (Unschärfe dahinter: SwayFX, layer_effects „rofi“) */
+
+* {
+  background-color: transparent;
+  text-color:       #f5f5f7;
+  accent:           #0a84ff;
+  dim:              rgba(245, 245, 247, 0.50);
+  font:             "SF Pro Text 12";
+}
+
+window {
+  location:         center;
+  anchor:           center;
+  width:            680px;
+  border:           1px;
+  border-color:     rgba(255, 255, 255, 0.22);
+  border-radius:    16px;
+  background-color: rgba(28, 28, 32, 0.55);
+}
+
+mainbox {
+  children: [ inputbar, message, listview ];
+  spacing:  0;
+}
+
+inputbar {
+  children: [ icon-search, entry ];
+  padding:  16px 20px;
+  spacing:  14px;
+}
+
+icon-search {
+  expand:         false;
+  filename:       "system-search";
+  size:           26px;
+  vertical-align: 0.5;
+}
+
+entry {
+  font:              "SF Pro Display 20";
+  placeholder:       "Spotlight-Suche";
+  placeholder-color: @dim;
+  vertical-align:    0.5;
+  cursor:            text;
+}
+
+message {
+  padding: 0 20px 10px 20px;
+}
+textbox {
+  text-color: @dim;
+  font:       "SF Pro Text 10";
+}
+
+listview {
+  lines:        8;
+  columns:      1;
+  fixed-height: false;
+  scrollbar:    false;
+  dynamic:      true;
+  spacing:      2px;
+  padding:      8px;
+  border:       1px 0 0 0;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+element {
+  padding:       8px 12px;
+  spacing:       12px;
+  border-radius: 10px;
+  cursor:        pointer;
+}
+element normal.normal, element alternate.normal {
+  background-color: transparent;
+  text-color:       #f5f5f7;
+}
+/* „aktive“ Zeilen, z. B. eingeschaltete Autostart-Apps */
+element normal.active, element alternate.active {
+  background-color: transparent;
+  text-color:       #64d2ff;
+}
+element selected.normal, element selected.active {
+  background-color: rgba(10, 132, 255, 0.85);
+  text-color:       #ffffff;
+}
+element-icon {
+  size:   30px;
+  cursor: inherit;
+}
+element-text {
+  vertical-align: 0.5;
+  text-color:     inherit;
+  highlight:      bold;
+  cursor:         inherit;
+}

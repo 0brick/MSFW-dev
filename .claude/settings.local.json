@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:newreleases.io)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

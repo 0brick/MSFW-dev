@@ -1,0 +1,7 @@
+[Desktop Entry]
+# i3-apple
+Name=Sway (i3-apple)
+Comment=Sway im macOS-Stil (Wayland)
+Exec=/usr/local/bin/sway-apple-session
+Type=Application
+DesktopNames=sway

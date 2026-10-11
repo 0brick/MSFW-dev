@@ -1,0 +1,21 @@
+# i3-apple · Sway · Touchpad & Tastatur
+# Nach einer Änderung: Super+Shift+R (Sway neu laden)
+
+# Antippen = Klicken
+tap=1
+# Natürliches Scrollen wie auf dem Mac (Inhalt folgt den Fingern)
+natural_scroll=1
+# Touchpad beim Tippen sperren
+disable_while_typing=1
+# Natürliches Scrollen auch für Mäuse
+mouse_natural_scroll=0
+
+# Tastenwiederholung: Verzögerung (ms) und Anschläge pro Sekunde
+repeat_delay=300
+repeat_rate=30
+
+# Tastaturlayout, z. B. "de" oder "de,us". Leer = aus den KDE-Einstellungen
+# übernehmen (Systemeinstellungen → Tastatur), sonst Systemstandard.
+layout=
+variant=
+options=

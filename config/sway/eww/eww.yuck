@@ -1,0 +1,338 @@
+;; ═══════════════════════════════════════════════════════════════════
+;;  i3-apple (Sway) · Menüleiste & Popups (eww, Wayland/Layer-Shell)
+;;  @EWW@ wird vom Installer durch den absoluten Pfad ersetzt.
+;;  Alle Symbole (*-symbolic) kommen aus dem eigenen Symbol-Theme „i3apple-sway-bar“
+;;  (eww.scss: -gtk-icon-theme, angelegt von scripts/bar-icons.py): WhiteSur, fehlende
+;;  Namen aus Adwaita/Breeze. Neue Symbolnamen auch in bar-icons.py eintragen.
+;;  Popups und die Klickfläche liegen unterhalb der Leiste: Sway reserviert
+;;  ihre 32 px (:exclusive), darum zählt :y ab der Unterkante der Leiste.
+;;  Ebenen: Klickfläche „fg“ (top), Popups „overlay“ – so liegt ein Popup immer
+;;  über der Klickfläche, egal in welcher Reihenfolge Sway sie stapelt.
+;;  (Gleiche Ebene → Klicks ins Popup trafen teils die Klickfläche und schlossen es.)
+;; ═══════════════════════════════════════════════════════════════════
+
+(defvar popup "")
+(defvar bat_show_pct true)
+
+;; ── Daten der Leiste ───────────────────────────────────────────────
+(deflisten wsjson  :initial "[]" "@EWW@/scripts/workspaces.sh")
+(deflisten focused :initial '{"app":"","title":"","output":""}' "@EWW@/scripts/focused.sh")
+(deflisten volume  :initial '{"volume":0,"muted":false,"mic":0,"mic_muted":false,"icon":"audio-volume-muted-symbolic","mic_icon":"audio-input-microphone-symbolic"}' "@EWW@/scripts/volume.sh listen")
+
+(defpoll clock   :interval "5s"  :initial "" "@EWW@/scripts/clock.sh bar")
+(defpoll wifi    :interval "4s"  :initial '{"enabled":false,"connected":false,"wired":false,"ssid":"","signal":0,"icon":"network-wireless-disabled-symbolic","label":""}' "@EWW@/scripts/wifi.sh status")
+(defpoll bt      :interval "5s"  :initial '{"available":false,"powered":false,"connected":0,"icon":"bluetooth-disabled-symbolic","label":""}' "@EWW@/scripts/bluetooth.sh status")
+(defpoll recording :interval "1s" :initial '{"active":false,"time":""}' "@EWW@/../scripts/record.sh status")
+(defpoll battery :interval "15s" :initial '{"available":false,"capacity":0,"state":"normal","plugged":false,"icon":"battery-missing-symbolic"}' "@EWW@/scripts/battery.sh status")
+
+;; ── Daten der Popups (laufen nur, solange das Popup offen ist) ─────
+(defpoll clock_long     :interval "60s" :initial ""      :run-while {popup == "calendar"}  "@EWW@/scripts/clock.sh long")
+(defpoll dnd            :interval "3s"  :initial "false" :run-while {popup == "calendar"}  "@EWW@/scripts/dnd.sh status")
+(defpoll wifi_list      :interval "8s"  :initial "[]"    :run-while {popup == "wifi"}      "@EWW@/scripts/wifi.sh list")
+(defpoll bt_devices     :interval "4s"  :initial "[]"    :run-while {popup == "bluetooth"} "@EWW@/scripts/bluetooth.sh devices")
+(defpoll sinks          :interval "4s"  :initial "[]"    :run-while {popup == "volume"}    "@EWW@/scripts/volume.sh sinks")
+(defpoll power_profiles :interval "10s" :initial "[]"    :run-while {popup == "battery"}   "@EWW@/scripts/battery.sh profiles")
+(defpoll bat_details    :interval "5s"
+  :initial '{"subtitle":"","health":"–","cycles":"–","power":"–","energy":"–","brightness_available":false,"brightness":0}'
+  :run-while {popup == "battery"}
+  "@EWW@/scripts/battery.sh details")
+(defpoll apps_list      :interval "2s"  :initial "[]"    :run-while {popup == "apps"}      "@EWW@/scripts/apps.sh list")
+
+
+;; ═══════════════════════════ Fenster ═══════════════════════════════
+
+(defwindow bar [output]
+  :geometry (geometry :x "0px" :y "0px" :width "100%" :height "32px" :anchor "top center")
+  :stacking "fg"
+  :exclusive true
+  :namespace "eww-bar"
+  (bar :output output))
+
+;; Unsichtbare Fläche unter den Popups: Klick daneben schließt sie.
+(defwindow closer
+  :geometry (geometry :x "0px" :y "0px" :width "100%" :height "100%" :anchor "top left")
+  :stacking "fg"
+  :namespace "eww-closer"
+  (eventbox :class "closer" :onclick "setsid -f @EWW@/scripts/popup.sh close"
+    (box :hexpand true :vexpand true)))
+
+;; Popups blenden beim Öffnen weich ein (eww.scss: .popup / fade-in).
+(defwindow calendar
+  :geometry (geometry :x "0px" :y "8px" :width "320px" :anchor "top center")
+  :stacking "overlay" :namespace "eww-popup"
+  (calendar-popup))
+
+(defwindow wifi
+  :geometry (geometry :x "10px" :y "8px" :width "340px" :anchor "top right")
+  :stacking "overlay" :namespace "eww-popup"
+  (wifi-popup))
+
+(defwindow bluetooth
+  :geometry (geometry :x "10px" :y "8px" :width "340px" :anchor "top right")
+  :stacking "overlay" :namespace "eww-popup"
+  (bluetooth-popup))
+
+(defwindow volume
+  :geometry (geometry :x "10px" :y "8px" :width "340px" :anchor "top right")
+  :stacking "overlay" :namespace "eww-popup"
+  (volume-popup))
+
+(defwindow battery
+  :geometry (geometry :x "10px" :y "8px" :width "340px" :anchor "top right")
+  :stacking "overlay" :namespace "eww-popup"
+  (battery-popup))
+
+(defwindow apps
+  :geometry (geometry :x "10px" :y "8px" :width "360px" :anchor "top right")
+  :stacking "overlay" :namespace "eww-popup"
+  (apps-popup))
+
+
+;; ═══════════════════════════ Bausteine ═════════════════════════════
+
+;; Symbol aus dem Icon-Theme; *-symbolic wird in der Textfarbe eingefärbt.
+(defwidget icon [name]
+  (image :class "icon" :icon name :icon-size "menu"))
+
+;; Der Knopf gleitet per CSS-Übergang (margin-left in eww.scss) –
+;; darum bleibt er links ausgerichtet statt zwischen start/end zu springen.
+(defwidget toggle [on action]
+  (button :class "toggle ${on ? 'on' : ''}" :valign "center" :onclick action
+    (box :class "knob" :halign "start" :valign "center")))
+
+(defwidget circle-icon [name on]
+  (box :class "row-icon ${on ? 'on' : ''}" :valign "center"
+    (icon :name name)))
+
+(defwidget sep []
+  (box :class "sep"))
+
+(defwidget kv [key value]
+  (box :class "kv" :space-evenly false
+    (label :class "key" :hexpand true :xalign 0 :text key)
+    (label :class "val" :xalign 1 :text value)))
+
+(defwidget slider-row [ico value change click]
+  (box :class "slider-row" :space-evenly false :spacing 10
+    (button :class "slider-btn" :valign "center" :onclick click
+      (icon :name ico))
+    (scale :class "slider" :hexpand true :valign "center" :min 0 :max 101 :value value :onchange change)))
+
+(defwidget link [text action]
+  (button :class "link" :onclick action
+    (label :xalign 0 :text text)))
+
+;; Abschnittsüberschrift über einer Karte (wie im macOS-Kontrollzentrum)
+(defwidget section [text]
+  (label :class "section" :xalign 0 :text text))
+
+;; Kopfzeile eines Popups: Titel, Untertitel und rechts ein beliebiges Element
+(defwidget header [title subtitle]
+  (box :class "header" :space-evenly false :spacing 12
+    (box :orientation "v" :space-evenly false :hexpand true :valign "center"
+      (label :class "title" :xalign 0 :text title)
+      (label :class "subtitle" :xalign 0 :limit-width 34 :visible {subtitle != ""} :text subtitle))
+    (children)))
+
+
+;; ═══════════════════════════ Menüleiste ════════════════════════════
+
+(defwidget bar [output]
+  (centerbox :class "bar"
+    ;; links: Arbeitsflächen (GNOME-Pillen) + aktive App
+    (box :halign "start" :space-evenly false :spacing 8
+      (workspaces :output output)
+      (label :class "app-name"
+             :visible {focused.output == output && focused.app != ""}
+             :limit-width 40
+             :text {focused.app}))
+    ;; Mitte: Datum & Uhrzeit
+    (button :class "item clock ${popup == 'calendar' ? 'active' : ''}"
+            :valign "center"
+            :onclick "setsid -f @EWW@/scripts/popup.sh calendar ${output}"
+      (label :text clock))
+    ;; rechts: Statussymbole
+    (box :halign "end" :space-evenly false :spacing 2
+      ;; Bildschirmaufnahme läuft: roter Punkt + Dauer, Klick beendet sie
+      (button :class "item recording" :valign "center"
+              :visible {recording.active}
+              :tooltip "Bildschirmaufnahme beenden"
+              :onclick "setsid -f @EWW@/../scripts/record.sh stop"
+        (box :space-evenly false :spacing 6 :valign "center"
+          (box :class "rec-dot" :valign "center")
+          (label :class "rec-time" :text {recording.time})))
+      (button :class "item ${popup == 'apps' ? 'active' : ''}" :valign "center"
+              :tooltip "Hintergrund-Apps"
+              :onclick "setsid -f @EWW@/scripts/popup.sh apps ${output}"
+        (icon :name "view-app-grid-symbolic"))
+      (button :class "item ${popup == 'bluetooth' ? 'active' : ''}" :valign "center"
+              :visible {bt.available}
+              :tooltip {bt.label}
+              :onclick "setsid -f @EWW@/scripts/popup.sh bluetooth ${output}"
+        (icon :name {bt.icon}))
+      (button :class "item ${popup == 'wifi' ? 'active' : ''}" :valign "center"
+              :tooltip {wifi.label}
+              :onclick "setsid -f @EWW@/scripts/popup.sh wifi ${output}"
+        (icon :name {wifi.icon}))
+      (eventbox :onscroll "@EWW@/scripts/volume.sh scroll {}"
+        (button :class "item ${popup == 'volume' ? 'active' : ''}" :valign "center"
+                :tooltip "Lautstärke ${volume.volume} %"
+                :onclick "setsid -f @EWW@/scripts/popup.sh volume ${output}"
+          (icon :name {volume.icon})))
+      (button :class "item battery ${battery.state} ${popup == 'battery' ? 'active' : ''}" :valign "center"
+              :visible {battery.available}
+              :tooltip "Batterie ${battery.capacity} %"
+              :onclick "setsid -f @EWW@/scripts/popup.sh battery ${output}"
+        (box :space-evenly false :spacing 5 :valign "center"
+          (label :class "bat-pct" :visible bat_show_pct :text "${battery.capacity} %")
+          (icon :name {battery.icon}))))))
+
+(defwidget workspaces [output]
+  (box :class "workspaces" :space-evenly false :spacing 2 :valign "center"
+    (for ws in wsjson
+      (button :visible {ws.output == output}
+              :class "ws ${ws.focused ? 'focused' : (ws.visible ? 'visible' : '')} ${ws.urgent ? 'urgent' : ''}"
+              :tooltip "Arbeitsfläche ${ws.name}"
+              :onclick "@EWW@/scripts/workspaces.sh goto ${ws.id}"
+        (box :class "pill" :valign "center")))))
+
+
+;; ═══════════════════════════ Popups ════════════════════════════════
+;; Aufbau wie im macOS-Kontrollzentrum: Kopfzeile, dann je Abschnitt eine
+;; Überschrift und eine abgesetzte Karte (.card), unten ein Link nach einer Linie.
+
+(defwidget calendar-popup []
+  (box :class "popup" :orientation "v" :space-evenly false
+    (label :class "title big" :xalign 0 :text clock_long)
+    (box :class "card cal-card" :orientation "v"
+      (calendar :class "cal"))
+    (box :class "card" :orientation "v" :space-evenly false
+      (box :class "row static" :space-evenly false :spacing 12
+        (circle-icon :name "notifications-disabled-symbolic" :on {dnd == "true"})
+        (box :orientation "v" :space-evenly false :hexpand true :valign "center"
+          (label :class "row-label" :xalign 0 :text "Nicht stören")
+          (label :class "meta" :xalign 0 :text {dnd == "true" ? "Mitteilungen stumm" : "Aus"}))
+        (toggle :on {dnd == "true"} :action "@EWW@/scripts/dnd.sh toggle")))
+    (sep)
+    (link :text "Alle Mitteilungen löschen" :action "@EWW@/scripts/dnd.sh clear")))
+
+(defwidget wifi-popup []
+  (box :class "popup" :orientation "v" :space-evenly false
+    (header :title "WLAN" :subtitle {wifi.label}
+      (toggle :on {wifi.enabled} :action "setsid -f @EWW@/scripts/wifi.sh toggle"))
+    (box :orientation "v" :space-evenly false :visible {wifi.enabled}
+      (section :text "Netzwerke")
+      (box :class "card" :orientation "v" :space-evenly false
+        (label :class "hint" :xalign 0 :visible {arraylength(wifi_list) == 0} :text "Suche nach Netzwerken …")
+        (for net in wifi_list
+          (button :class "row" :tooltip {net.active ? "Klicken zum Trennen" : "Klicken zum Verbinden"}
+                  :onclick "setsid -f @EWW@/scripts/wifi.sh connect-index ${net.idx}"
+            (box :space-evenly false :spacing 12
+              (circle-icon :name {net.icon} :on {net.active})
+              (box :orientation "v" :space-evenly false :hexpand true :valign "center"
+                (label :class "row-label" :xalign 0 :limit-width 26 :text {net.ssid})
+                (label :class "meta" :xalign 0 :visible {net.active || net.known}
+                       :text {net.active ? "Verbunden" : "Gespeichert"}))
+              (box :visible {net.secure} :valign "center" :class "dim"
+                (icon :name "network-wireless-encrypted-symbolic")))))))
+    (sep)
+    (link :text "Netzwerkeinstellungen …" :action "setsid -f @EWW@/scripts/popup.sh launch network")))
+
+(defwidget bluetooth-popup []
+  (box :class "popup" :orientation "v" :space-evenly false
+    (header :title "Bluetooth" :subtitle {bt.label}
+      (toggle :on {bt.powered} :action "setsid -f @EWW@/scripts/bluetooth.sh toggle"))
+    (box :orientation "v" :space-evenly false :visible {bt.powered}
+      (section :text "Geräte")
+      (box :class "card" :orientation "v" :space-evenly false
+        (label :class "hint" :xalign 0 :visible {arraylength(bt_devices) == 0} :text "Keine gekoppelten Geräte")
+        (for dev in bt_devices
+          (button :class "row" :tooltip {dev.connected ? "Klicken zum Trennen" : "Klicken zum Verbinden"}
+                  :onclick "setsid -f @EWW@/scripts/bluetooth.sh connect ${dev.mac}"
+            (box :space-evenly false :spacing 12
+              (circle-icon :name {dev.icon} :on {dev.connected})
+              (box :orientation "v" :space-evenly false :hexpand true :valign "center"
+                (label :class "row-label" :xalign 0 :limit-width 26 :text {dev.name})
+                (label :class "meta" :xalign 0 :visible {dev.connected} :text "Verbunden"))
+              (label :class "meta" :valign "center" :visible {dev.battery != ""} :text "${dev.battery} %"))))))
+    (sep)
+    (link :text "Weitere Geräte & Einstellungen …" :action "setsid -f @EWW@/scripts/popup.sh launch bluetooth")))
+
+(defwidget volume-popup []
+  (box :class "popup" :orientation "v" :space-evenly false
+    (header :title "Ton" :subtitle ""
+      (label :class "header-value" :valign "center"
+             :text {volume.muted ? "Stumm" : "${volume.volume} %"}))
+    (section :text "Lautstärke")
+    (box :class "card"
+      (slider-row :ico {volume.icon} :value {volume.volume}
+                  :change "@EWW@/scripts/volume.sh set {}"
+                  :click "@EWW@/scripts/volume.sh mute"))
+    (section :text "Mikrofon")
+    (box :class "card"
+      (slider-row :ico {volume.mic_icon} :value {volume.mic}
+                  :change "@EWW@/scripts/volume.sh mic-set {}"
+                  :click "@EWW@/scripts/volume.sh mic-mute"))
+    (section :text "Ausgabe")
+    (box :class "card" :orientation "v" :space-evenly false
+      (for s in sinks
+        (button :class "row" :onclick "@EWW@/scripts/volume.sh sink ${s.id}"
+          (box :space-evenly false :spacing 12
+            (circle-icon :name "audio-speakers-symbolic" :on {s.default})
+            (label :class "row-label" :hexpand true :xalign 0 :limit-width 30 :text {s.name})
+            (box :visible {s.default} :valign "center" :class "check"
+              (icon :name "object-select-symbolic"))))))
+    (sep)
+    (link :text "Ton-Einstellungen …" :action "setsid -f @EWW@/scripts/popup.sh launch sound")))
+
+(defwidget battery-popup []
+  (box :class "popup" :orientation "v" :space-evenly false
+    (header :title "Batterie" :subtitle {bat_details.subtitle}
+      (label :class "header-value big-pct" :valign "center" :text "${battery.capacity} %"))
+    (box :orientation "v" :space-evenly false :visible {arraylength(power_profiles) > 0}
+      (section :text "Energiemodus")
+      (box :class "segmented" :spacing 2
+        (for p in power_profiles
+          (button :class "seg ${p.active ? 'active' : ''}"
+                  :onclick "setsid -f @EWW@/scripts/battery.sh profile ${p.name}"
+            (label :text {p.label})))))
+    (box :orientation "v" :space-evenly false :visible {bat_details.brightness_available}
+      (section :text "Bildschirm")
+      (box :class "card"
+        (slider-row :ico "display-brightness-symbolic" :value {bat_details.brightness}
+                    :change "@EWW@/scripts/battery.sh brightness {}"
+                    :click "")))
+    (section :text "Details")
+    (box :class "card" :orientation "v" :space-evenly false
+      (kv :key "Zustand" :value {bat_details.health})
+      (kv :key "Ladezyklen" :value {bat_details.cycles})
+      (kv :key "Leistungsaufnahme" :value {bat_details.power})
+      (kv :key "Kapazität" :value {bat_details.energy}))
+    (box :class "card" :orientation "v" :space-evenly false
+      (box :class "row static" :space-evenly false :spacing 12
+        (label :class "row-label" :hexpand true :xalign 0 :text "Prozent in der Menüleiste")
+        (toggle :on bat_show_pct :action "@EWW@/scripts/battery.sh toggle-pct")))
+    (sep)
+    (link :text "Batterie-Statistik …" :action "setsid -f @EWW@/scripts/popup.sh launch power")))
+
+(defwidget apps-popup []
+  (box :class "popup" :orientation "v" :space-evenly false
+    (header :title "Hintergrund-Apps" :subtitle "Apps mit Symbol in der Statusleiste")
+    (box :class "card tray-box"
+      (systray :class "tray" :spacing 14 :icon-size 20 :prepend-new false))
+    (section :text "Geöffnete Fenster")
+    (box :class "card" :orientation "v" :space-evenly false
+      (label :class "hint" :xalign 0 :visible {arraylength(apps_list) == 0} :text "Keine Fenster geöffnet")
+      (for w in apps_list
+        (button :class "row" :onclick "setsid -f @EWW@/scripts/apps.sh focus ${w.id}"
+          (box :space-evenly false :spacing 12
+            (circle-icon :name "application-x-executable-symbolic" :on false)
+            (box :orientation "v" :space-evenly false :hexpand true :valign "center"
+              (label :class "row-label" :xalign 0 :limit-width 28 :text {w.app})
+              (label :class "meta" :xalign 0 :limit-width 34 :text {w.title}))
+            (label :class "badge" :valign "center" :text {w.ws})
+            (button :class "close-btn" :valign "center" :tooltip "Fenster schließen"
+                    :onclick "@EWW@/scripts/apps.sh close ${w.id}"
+              (icon :name "window-close-symbolic"))))))
+    (sep)
+    (link :text "Autostart-Apps verwalten …" :action "setsid -f @EWW@/scripts/popup.sh launch autostart")))

@@ -1,0 +1,85 @@
+# i3-apple · Sway · Mitteilungen im macOS-Stil (oben rechts, abgerundet)
+
+[global]
+    monitor = 0
+    follow = mouse
+    width = 360
+    height = 300
+    origin = top-right
+    offset = 12x44
+    notification_limit = 5
+    gap_size = 8
+
+    progress_bar = true
+    progress_bar_height = 6
+    progress_bar_frame_width = 0
+    progress_bar_min_width = 150
+    progress_bar_max_width = 330
+    progress_bar_corner_radius = 3
+
+    indicate_hidden = yes
+    transparency = 0
+    separator_height = 0
+    padding = 12
+    horizontal_padding = 14
+    text_icon_padding = 12
+    frame_width = 1
+    frame_color = "#ffffff22"
+    separator_color = frame
+    corner_radius = 12
+    sort = yes
+
+    font = SF Pro Text 10
+    line_height = 2
+    markup = full
+    format = "<b>%s</b>\n%b"
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = 60
+    ellipsize = end
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = no
+
+    enable_recursive_icon_lookup = true
+    icon_theme = "WhiteSur-dark, Adwaita"
+    icon_position = left
+    min_icon_size = 32
+    max_icon_size = 40
+
+    sticky_history = yes
+    history_length = 30
+    browser = /usr/bin/xdg-open
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+
+    mouse_left_click = do_action, close_current
+    mouse_middle_click = close_all
+    mouse_right_click = close_current
+
+[urgency_low]
+    background = "#26262ae6"
+    foreground = "#f5f5f7"
+    highlight = "#f5f5f7"
+    timeout = 4
+
+[urgency_normal]
+    background = "#26262ae6"
+    foreground = "#f5f5f7"
+    highlight = "#f5f5f7"
+    timeout = 6
+
+[urgency_critical]
+    background = "#3a1d1de6"
+    foreground = "#ffffff"
+    frame_color = "#ff453a"
+    highlight = "#ff453a"
+    timeout = 0
+
+# Lautstärke-/Helligkeits-Einblendungen: kompakt, ohne Titel-Format
+[osd]
+    appname = osd
+    format = "<b>%s</b>"
+    history_ignore = yes

@@ -1,0 +1,5 @@
+# Favoriten im Launcher (Super+Leertaste), in dieser Reihenfolge ganz oben.
+# Pro Zeile eine App; mehrere .desktop-IDs = Alternativen, die erste vorhandene zählt.
+firefox.desktop firefox-esr.desktop org.mozilla.firefox.desktop
+dev.zed.Zed.desktop zed.desktop
+thunderbird.desktop org.mozilla.Thunderbird.desktop net.thunderbird.Thunderbird.desktop

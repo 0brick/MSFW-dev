@@ -1,0 +1,170 @@
+
+// ── Nur Sway (vom Installer an eww.scss angehängt) ─────────────────
+// Symbole immer aus dem eigenen Symbol-Theme der Menüleiste (scripts/bar-icons.py).
+// Ohne diese Zeile nimmt GTK das Symbol-Theme aus gsettings/dconf der Sitzung –
+// kam dort kein WhiteSur an, zeigte die Leiste nur Platzhalter.
+* { -gtk-icon-theme: "i3apple-sway-bar"; }
+
+// Alles Folgende überschreibt Werte aus dem gemeinsamen eww.scss (gleiche
+// Selektoren, spätere Regel gewinnt). Die i3-Variante bleibt so unverändert.
+
+// ── Bewegung ───────────────────────────────────────────────────────
+// Dezent: kurze Übergänge, weiche Kurven, nichts springt.
+// Wichtig: Keine Einblend-Animation an Elementen in (for …)-Schleifen –
+// eww baut sie bei jeder Aktualisierung neu auf, sie würden sonst flackern.
+$ease:     cubic-bezier(0.25, 0.1, 0.25, 1);
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+$card:     rgba(255, 255, 255, 0.07);
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes rec-pulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.35; }
+  100% { opacity: 1; }
+}
+// Die aktive Arbeitsfläche „wächst“ zur langen Pille. Als Animation statt
+// Übergang, weil eww die Pillen bei jedem Wechsel neu erzeugt.
+@keyframes ws-grow {
+  from { min-width: 7px; }
+  to   { min-width: 22px; }
+}
+
+tooltip {
+  border-radius: 8px;
+  padding: 5px 10px;
+  animation: fade-in 140ms $ease-out;
+}
+
+// ── Menüleiste ─────────────────────────────────────────────────────
+
+.bar {
+  padding: 0 12px;
+  animation: fade-in 320ms $ease-out;
+}
+
+.item {
+  padding: 0 10px;
+  margin: 4px 1px;
+  border-radius: 7px;
+  transition: background-color 180ms $ease;
+}
+
+.icon { transition: color 200ms $ease; }
+
+.app-name { margin-left: 6px; }
+
+.ws { padding: 0 3px; }
+.ws .pill {
+  transition: min-width 280ms $ease-out, background-color 220ms $ease;
+}
+.ws.focused .pill {
+  min-width: 22px;
+  animation: ws-grow 280ms $ease-out;
+}
+
+.rec-dot { animation: rec-pulse 1.6s ease-in-out infinite; }
+
+// ── Popups (Kontrollzentrum-Stil) ──────────────────────────────────
+// border-radius = corner_radius von „eww-popup“ in fx-effects.conf
+
+.popup {
+  background-color: rgba(36, 36, 40, 0.80);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 14px;
+  animation: fade-in 170ms $ease-out;
+}
+
+.header { margin: 2px 4px 4px 4px; }
+.header-value {
+  color: $fg-dim;
+  font-size: 13px;
+  font-weight: 600;
+}
+.title { font-size: 15px; font-weight: 700; }
+.title.big { font-size: 15px; margin: 2px 4px 10px 4px; }
+.big-pct { color: $fg; font-size: 18px; font-weight: 600; }
+.subtitle { font-size: 12px; margin-top: 2px; }
+
+// Abschnitt = Überschrift + Karte darunter
+.section {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 14px 8px 0 8px;
+}
+.card {
+  background-color: $card;
+  border-radius: 10px;
+  padding: 4px;
+  margin-top: 6px;
+}
+.cal-card { padding: 6px 4px; }
+.tray-box { margin: 10px 0 0 0; padding: 10px 12px; }
+
+.hint { margin: 8px; }
+
+.sep {
+  background-color: rgba(255, 255, 255, 0.08);
+  margin: 12px 6px 6px 6px;
+}
+
+.row {
+  padding: 6px 8px;
+  border-radius: 7px;
+  transition: background-color 150ms $ease;
+}
+.row:hover { background-color: rgba(255, 255, 255, 0.08); }
+.row.static:hover { background-color: transparent; }
+.row-label { font-weight: 500; }
+.meta { margin-top: 1px; }
+
+.row-icon {
+  min-width: 28px;
+  min-height: 28px;
+  transition: background-color 220ms $ease;
+}
+.check .icon { color: $accent; }
+
+.badge { padding: 2px 8px; }
+
+.close-btn {
+  min-width: 24px;
+  min-height: 24px;
+  transition: opacity 150ms $ease, background-color 150ms $ease;
+}
+
+.link {
+  padding: 7px 8px;
+  border-radius: 7px;
+  transition: background-color 150ms $ease;
+}
+
+.kv { padding: 5px 8px; }
+
+// Schalter: Knopf gleitet (eww.yuck hält ihn links, der Rand schiebt ihn)
+.toggle { transition: background-color 220ms $ease; }
+.toggle .knob {
+  margin: 2px;
+  transition: margin-left 240ms $ease-out;
+}
+.toggle.on .knob { margin-left: 18px; }
+
+.segmented {
+  border-radius: 9px;
+  margin: 6px 0 0 0;
+}
+.seg {
+  padding: 6px 4px;
+  border-radius: 7px;
+  transition: background-color 180ms $ease;
+}
+
+.slider-row { margin: 4px 6px; }
+.slider-btn { transition: background-color 150ms $ease; }
+scale highlight { transition: background-color 200ms $ease; }
+
+.tray menu { border-radius: 10px; padding: 5px; }
+.tray menu menuitem { padding: 5px 12px; border-radius: 6px; }

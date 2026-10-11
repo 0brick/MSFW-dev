@@ -1,0 +1,304 @@
+# ═══════════════════════════════════════════════════════════════════
+#  i3-apple · Sway-Konfiguration (Wayland)
+#  Tastenbelegung nach ML4W OS (https://ml4w.com/os/usage/keybindings).
+#  „#: …“ über einem bindsym ist die Beschreibung für die Übersicht (Super+Strg+K).
+# ═══════════════════════════════════════════════════════════════════
+
+set $mod     Mod4
+set $alt     Mod1
+set $term    kitty
+set $scripts ~/.config/sway/scripts
+set $eww     ~/.config/sway/eww/scripts
+
+font pango:SF Pro Text Semibold 10
+
+# ── Aussehen ────────────────────────────────────────────────────────
+# Keine Rahmen; mit SwayFX zeigen Schatten und leichtes Abdunkeln den Fokus.
+default_border pixel 0
+default_floating_border pixel 0
+hide_edge_borders smart
+title_align center
+
+gaps inner 10
+gaps outer 2
+
+#                       Rahmen  Hintergr. Text    Indikator Kind-Rahmen
+client.focused          #48484e #48484e   #f5f5f7 #0a84ff   #0a84ff
+client.focused_inactive #2c2c30 #2c2c30   #c7c7cc #2c2c30   #2c2c30
+client.unfocused        #232326 #232326   #8e8e93 #232326   #232326
+client.urgent           #ff453a #ff453a   #ffffff #ff453a   #ff453a
+client.placeholder      #1e1e20 #1e1e20   #8e8e93 #1e1e20   #1e1e20
+
+# Mauszeiger für Wayland- und X-Apps
+seat seat0 xcursor_theme macOS 24
+
+# Abgerundete Ecken, Schatten, Glas-Unschärfe – nur mit SwayFX.
+# Die Datei erzeugt der Sitzungsstart (leer bei normalem Sway).
+include ~/.config/sway/fx.conf
+
+# ── Verhalten ───────────────────────────────────────────────────────
+# Super + linke Maustaste verschiebt, Super + rechte Maustaste ändert die Größe
+floating_modifier $mod normal
+tiling_drag enable
+focus_follows_mouse no
+mouse_warping output
+# Super+1 springt immer auf Arbeitsfläche 1 – auch wenn sie schon aktiv ist
+# (mit „yes“ ginge es beim zweiten Druck zur vorherigen zurück)
+workspace_auto_back_and_forth no
+focus_on_window_activation smart
+popup_during_fullscreen smart
+xwayland enable
+
+# ── Fensterregeln ───────────────────────────────────────────────────
+for_window [window_role="pop-up"]      floating enable
+for_window [window_role="dialog"]      floating enable
+for_window [window_type="dialog"]      floating enable
+for_window [window_type="utility"]     floating enable
+# i3-apple: Hintergrundbild-Auswahl und Bildschirm-Einstellungen
+for_window [app_id="^i3apple-wallpaper$"] floating enable, move position center
+for_window [app_id="^i3apple-displays$"]  floating enable, resize set 920 700, move position center
+# Menüs und Übersichten (scripts/menu.py: Kürzel, Fenster, Einstellungen …)
+for_window [app_id="^i3apple-menu$"]      floating enable, move position center
+for_window [app_id="(?i)wl-mirror"]    inhibit_idle visible
+# KDE: einzelne Einstellungsmodule, Rechner, Passwortabfragen (Wayland: app_id, XWayland: class)
+for_window [app_id="(?i)kcmshell6"]    floating enable, resize set 860 620, move position center
+for_window [class="(?i)kcmshell6"]     floating enable, resize set 860 620, move position center
+for_window [app_id="(?i)kcalc"]        floating enable, move position center
+for_window [app_id="(?i)bluedevil-wizard"] floating enable, move position center
+for_window [app_id="(?i)polkit-kde-authentication-agent-1"] floating enable, move position center
+for_window [class="(?i)polkit-kde-authentication-agent-1"]  floating enable, move position center
+# GTK-Werkzeuge (ohne KDE)
+for_window [app_id="(?i)pavucontrol"]  floating enable, resize set 760 520, move position center
+for_window [app_id="(?i)blueman-manager"] floating enable, resize set 640 480, move position center
+for_window [app_id="(?i)nm-connection-editor"] floating enable, move position center
+for_window [app_id="(?i)gnome-power-statistics"] floating enable, resize set 820 560, move position center
+for_window [app_id="(?i)gnome-calculator"] floating enable, move position center
+for_window [app_id="(?i)swappy"]       floating enable, move position center
+for_window [class="(?i)lxappearance"]  floating enable, move position center
+# Firefox: Bild-im-Bild schwebend und auf allen Arbeitsflächen
+for_window [app_id="(?i)firefox" title="^(Bild-im-Bild|Picture-in-Picture)$"] floating enable, sticky enable
+
+# ── Autostart ───────────────────────────────────────────────────────
+# Einmalig: Umgebung & Autostart-Apps (eigene Apps über Super+Strg+S → „Autostart-Apps“)
+exec $scripts/autostart.sh
+# Dienste (dunst, swayidle, Zwischenablage, kanshi …) – startet bei jedem Neuladen,
+# was fehlt; Protokoll in $XDG_RUNTIME_DIR/sway-apple/services.log
+exec_always $scripts/services.sh
+exec_always $eww/launch-bars.sh
+# Touchpad & Tastatur (~/.config/i3-apple/input) – Super+Shift+R übernimmt Änderungen
+exec_always $scripts/input.sh
+exec_always $scripts/wallpaper.sh
+
+# ═══════════════════ Fenster & Arbeitsflächen ═══════════════════════
+
+#: Arbeitsfläche 1
+bindsym $mod+1 workspace number 1
+#: Arbeitsfläche 2
+bindsym $mod+2 workspace number 2
+#: Arbeitsfläche 3
+bindsym $mod+3 workspace number 3
+#: Arbeitsfläche 4
+bindsym $mod+4 workspace number 4
+#: Arbeitsfläche 5
+bindsym $mod+5 workspace number 5
+#: Arbeitsfläche 6
+bindsym $mod+6 workspace number 6
+#: Arbeitsfläche 7
+bindsym $mod+7 workspace number 7
+#: Arbeitsfläche 8
+bindsym $mod+8 workspace number 8
+#: Arbeitsfläche 9
+bindsym $mod+9 workspace number 9
+#: Arbeitsfläche 10
+bindsym $mod+0 workspace number 10
+
+#: Fenster auf Arbeitsfläche 1 verschieben
+bindsym $mod+Shift+1 move container to workspace number 1
+#: Fenster auf Arbeitsfläche 2 verschieben
+bindsym $mod+Shift+2 move container to workspace number 2
+#: Fenster auf Arbeitsfläche 3 verschieben
+bindsym $mod+Shift+3 move container to workspace number 3
+#: Fenster auf Arbeitsfläche 4 verschieben
+bindsym $mod+Shift+4 move container to workspace number 4
+#: Fenster auf Arbeitsfläche 5 verschieben
+bindsym $mod+Shift+5 move container to workspace number 5
+#: Fenster auf Arbeitsfläche 6 verschieben
+bindsym $mod+Shift+6 move container to workspace number 6
+#: Fenster auf Arbeitsfläche 7 verschieben
+bindsym $mod+Shift+7 move container to workspace number 7
+#: Fenster auf Arbeitsfläche 8 verschieben
+bindsym $mod+Shift+8 move container to workspace number 8
+#: Fenster auf Arbeitsfläche 9 verschieben
+bindsym $mod+Shift+9 move container to workspace number 9
+#: Fenster auf Arbeitsfläche 10 verschieben
+bindsym $mod+Shift+0 move container to workspace number 10
+
+#: Mausrad: vorherige Arbeitsfläche
+bindsym --whole-window $mod+button4 workspace prev_on_output
+#: Mausrad: nächste Arbeitsfläche
+bindsym --whole-window $mod+button5 workspace next_on_output
+#: Vorherige Arbeitsfläche
+bindsym $mod+Control+Left workspace prev_on_output
+#: Nächste Arbeitsfläche
+bindsym $mod+Control+Right workspace next_on_output
+
+#: Fensterübersicht
+bindsym $mod+Tab exec $scripts/windows.sh
+
+#: Fokus nach links
+bindsym $mod+Left focus left
+#: Fokus nach unten
+bindsym $mod+Down focus down
+#: Fokus nach oben
+bindsym $mod+Up focus up
+#: Fokus nach rechts
+bindsym $mod+Right focus right
+
+#: Fenster schließen
+bindsym $mod+q kill
+#: Alle Fenster der aktiven App schließen
+bindsym $mod+Shift+q exec $scripts/window.sh kill-app
+#: Vollbild
+bindsym $mod+f fullscreen toggle
+#: Maximieren (Menüleiste bleibt sichtbar)
+bindsym $mod+m exec $scripts/window.sh maximize
+#: Schwebend / gekachelt umschalten
+bindsym $mod+t floating toggle
+#: Alle Fenster der Arbeitsfläche schwebend / gekachelt
+bindsym $mod+Shift+t [workspace=__focused__] floating toggle
+#: Schwebend und auf allen Arbeitsflächen anheften
+bindsym $mod+$alt+t floating enable, sticky toggle
+
+#: Größe ändern: schmaler
+bindsym $mod+Shift+Left resize shrink width 30 px or 3 ppt
+#: Größe ändern: niedriger
+bindsym $mod+Shift+Up resize shrink height 30 px or 3 ppt
+#: Größe ändern: höher
+bindsym $mod+Shift+Down resize grow height 30 px or 3 ppt
+#: Größe ändern: breiter
+bindsym $mod+Shift+Right resize grow width 30 px or 3 ppt
+
+#: Fenster nach links tauschen
+bindsym $mod+$alt+Left move left
+#: Fenster nach unten tauschen
+bindsym $mod+$alt+Down move down
+#: Fenster nach oben tauschen
+bindsym $mod+$alt+Up move up
+#: Fenster nach rechts tauschen
+bindsym $mod+$alt+Right move right
+
+#: Teilungsrichtung umschalten
+bindsym $mod+j layout toggle split
+#: Teilung für das nächste Fenster wechseln
+bindsym $mod+k split toggle
+#: Fenstergruppe (Tabs) umschalten
+bindsym $mod+g layout toggle tabbed split
+
+#: Ablage (Scratchpad) zeigen / verbergen
+bindsym $mod+s scratchpad show
+#: Fenster in die Ablage verschieben
+bindsym $mod+Shift+s move scratchpad
+
+# ═══════════════════ Apps & Werkzeuge ═══════════════════════════════
+
+#: Terminal (kitty)
+bindsym $mod+Return exec $term
+#: Browser (Firefox)
+bindsym $mod+b exec $scripts/run.sh browser
+#: Dateimanager
+bindsym $mod+e exec $scripts/run.sh files
+#: Rechner
+bindsym $mod+c exec $scripts/run.sh calculator
+#: Zwischenablage-Verlauf
+bindsym $mod+v exec $scripts/run.sh clipboard
+#: Emoji-Auswahl
+bindsym $mod+Control+e exec $scripts/run.sh emoji
+#: App-Launcher (Spotlight)
+bindsym $mod+Control+Return exec $scripts/launcher.sh
+#: App-Launcher (Spotlight)
+bindsym $mod+space exec $scripts/launcher.sh
+#: Alle Tastenkürzel anzeigen
+bindsym $mod+Control+k exec $scripts/keybindings.sh
+#: Einstellungen
+bindsym $mod+Control+s exec $scripts/settings-menu.sh
+#: Kalender
+bindsym $mod+Control+c exec $eww/popup.sh calendar
+#: Hintergrundbild wählen
+bindsym $mod+Control+w exec $scripts/wallpaper.sh select
+#: Ausschalten-Menü
+bindsym $mod+Control+p exec $scripts/powermenu.sh
+#: Bildschirme anordnen
+bindsym $mod+p exec $scripts/display-menu.sh
+
+# ═══════════════════ Oberfläche & Umgebung ══════════════════════════
+
+#: Zufälliges Hintergrundbild
+bindsym $mod+Shift+w exec $scripts/wallpaper.sh random
+#: Automatischen Hintergrundwechsel an/aus
+bindsym $mod+$alt+w exec $scripts/wallpaper.sh rotate
+#: Hell / Dunkel umschalten
+bindsym $mod+Shift+m exec $scripts/theme.sh toggle
+#: Erscheinungsbild wählen
+bindsym Control+$alt+t exec $scripts/theme.sh menu
+#: Menüleiste neu laden
+bindsym $mod+Shift+b exec $eww/launch-bars.sh
+#: Menüleiste ein-/ausblenden
+bindsym $mod+Control+b exec $scripts/toggles.sh bar
+#: Blaulichtfilter an/aus
+bindsym $mod+Shift+h exec $scripts/toggles.sh nightlight
+#: Effekte (Unschärfe, Schatten) an/aus
+bindsym $mod+Shift+a exec $scripts/toggles.sh animations
+#: Spielmodus an/aus
+bindsym $mod+$alt+g exec $scripts/toggles.sh gamemode
+#: Sway neu laden
+bindsym $mod+Shift+r exec $scripts/reload.sh
+#: Bildschirm sperren
+bindsym $mod+Control+l exec $scripts/lock.sh
+
+# ═══════════════════ Bildschirmfotos ════════════════════════════════
+
+#: Bildschirmfoto & Aufnahme (Auswahl)
+bindsym $mod+Print exec $scripts/screenshot.sh gui
+#: Bildschirmaufnahme starten / beenden
+bindsym $mod+$alt+r exec $scripts/record.sh toggle
+#: Bildschirmfoto: ganzer Bildschirm
+bindsym $mod+$alt+f exec $scripts/screenshot.sh full
+#: Bildschirmfoto: Bereich
+bindsym $mod+$alt+s exec $scripts/screenshot.sh area
+#: Text aus Bereich erkennen (OCR)
+bindsym $mod+$alt+a exec $scripts/ocr.sh
+#: Bildschirmfoto: Bereich
+bindsym Print exec $scripts/screenshot.sh area
+
+# ═══════════════════ Medientasten ═══════════════════════════════════
+# --locked: funktionieren auch auf dem Sperrbildschirm
+
+#: Lauter
+bindsym --locked XF86AudioRaiseVolume  exec $eww/volume.sh up
+#: Leiser
+bindsym --locked XF86AudioLowerVolume  exec $eww/volume.sh down
+#: Ton aus / an
+bindsym --locked XF86AudioMute         exec $eww/volume.sh mute --osd
+#: Mikrofon aus / an
+bindsym --locked XF86AudioMicMute      exec $eww/volume.sh mic-mute
+#: Bildschirm heller
+bindsym --locked XF86MonBrightnessUp   exec $eww/battery.sh brightness-up
+#: Bildschirm dunkler
+bindsym --locked XF86MonBrightnessDown exec $eww/battery.sh brightness-down
+#: Wiedergabe / Pause
+bindsym --locked XF86AudioPlay         exec playerctl play-pause
+#: Wiedergabe / Pause
+bindsym --locked XF86AudioPause        exec playerctl play-pause
+#: Nächster Titel
+bindsym --locked XF86AudioNext         exec playerctl next
+#: Vorheriger Titel
+bindsym --locked XF86AudioPrev         exec playerctl previous
+
+# ═══════════════════ Eigene Anpassungen ═════════════════════════════
+# Eigene Kürzel, Fensterregeln, output-/input-Befehle … gehören in die Datei
+# unten – der Installer legt sie nur an und überschreibt sie nie. Direkte
+# Änderungen an ~/.config/sway/config bleiben ebenfalls erhalten, solange die
+# Datei im Repo gleich bleibt; ändert sich beides, wird deine Fassung nach
+# ~/.config/i3-apple/lokale-aenderungen/ gesichert und ersetzt.
+# „#: Beschreibung“ über einem bindsym zeigt es auch dort in der Übersicht (⌘⌃K).
+include ~/.config/i3-apple/sway-user.conf

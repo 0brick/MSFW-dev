@@ -1,0 +1,22 @@
+configuration {
+  modi: "drun,window,run";
+  show-icons: true;
+  icon-theme: "WhiteSur-dark";
+  font: "SF Pro Text 12";
+  drun-display-format: "{name}";
+  window-format: "{c}   ·   {t}";
+  kb-accept-custom: "Control+Return";
+  display-drun: "";
+  display-window: "";
+  display-run: "";
+  matching: "fuzzy";
+  sort: true;
+  sorting-method: "fzf";
+  disable-history: false;
+  hover-select: true;
+  me-select-entry: "";
+  me-accept-entry: "MousePrimary";
+}
+
+// @SWAY@ ersetzt der Installer durch den absoluten Pfad von ~/.config/sway
+@theme "@SWAY@/rofi/spotlight.rasi"
